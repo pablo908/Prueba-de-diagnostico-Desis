@@ -1,1 +1,21 @@
+-- Versión del servidor:         10.6.2-MariaDB - mariadb.org binary distribution
+-- versión del motor:            10.6.2-InnoDB
+-- HeidiSQL Versión:             11.3.0.6295
+-- Versión de PHP:               8.2.12 (cli)
 
+1. Copiar todos los archivos a un servidor web con PHP y MySQL/MariaDB.
+2. Crear una base de datos llamada "formularioproducto" (puede usar phpMyAdmin o línea de comandos).
+3. Importar el archivo SQL/baseDeDatosProductos.sql en la base de datos recién creada.
+4. Editar el archivo conexion.php y ajustar los datos de conexión:
+   - $servidor   = "localhost";
+   - $usuario    = "root";
+   - $contrasena = "tu_contraseña";
+   - $baseDatos  = "formularioproducto";
+5. Asegurarse de que el servidor tenga PHP 8.2.12 o superior.
+6. Abrir el archivo formularioDeProducto.html desde el navegador.
+
+En caso de surgir algún problema para levantar el sitio dejare un link para que
+puedan visualizarlo en la red, lo dejare corriendo una semana en caso de 
+necesitar usarlo posterior se pueden comunicar conmigo
+
+Link: https://moveably-interested-elijah.ngrok-free.dev/prueba/formularioDeProducto.html

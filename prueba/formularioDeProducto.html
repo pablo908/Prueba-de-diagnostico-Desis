@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Formulario de Producto</title>
+    <link rel="stylesheet" href="formularioDeProducto.css">
+</head>
+<body>
+    <div class="contenedor">
+        <h2>Formulario de Producto <small style="font-size: 10px; color: #ccc;">v4</small></h2>
+        <div class="grupoFormulario">
+            <div>
+                <label>Código</label>
+                <input type="text" id="codigoProducto">
+            </div>
+            <div>
+                <label>Nombre</label>
+                <input type="text" id="nombreProducto">
+            </div>
+        </div>
+        <div class="grupoFormulario">
+            <div>
+                <label>Bodega</label>
+                <select id="bodega">
+                    <option value="">Seleccione...</option>
+                </select>
+            </div>
+            <div>
+                <label>Sucursal</label>
+                <select id="sucursal">
+                    <option value="">Seleccione...</option>
+                </select>
+            </div>
+        </div>
+        <div class="grupoFormulario">
+            <div>
+                <label>Moneda</label>
+                <select id="moneda">
+                    <option value="">Seleccione...</option>
+                </select>
+            </div>
+            <div>
+                <label>Precio</label>
+                <input type="number" id="precio">
+            </div>
+        </div>
+        <div class="grupoRadios">
+            <label>Material del Producto</label><br>
+            <input type="checkbox" name="material"> Plástico
+            <input type="checkbox" name="material"> Metal
+            <input type="checkbox" name="material"> Madera
+            <input type="checkbox" name="material"> Vidrio
+            <input type="checkbox" name="material"> Textil
+        </div>
+        <div class="anchoCompleto">
+            <label>Descripción</label>
+            <textarea id="descripcion" placeholder="Ingrese una descripción..."></textarea>
+        </div>
+        <button id="btnGuardar">Guardar Producto</button>
+    </div>
+    <script src="validaciones.js"></script>
+    <script src="envioAjax.js"></script>
+</body>
+</html>
