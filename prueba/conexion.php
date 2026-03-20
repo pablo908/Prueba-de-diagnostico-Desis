@@ -6,16 +6,25 @@ $contrasena = "pablo2014";
 $baseDatos = "formularioproducto";
 
 // Crear conexión usando MySQLi
-$conexion = new mysqli($servidor, $usuario, $contrasena, $baseDatos);
+try {
+    // Desactivar reporte de errores de mysqli para manejarlo manualmente
+    mysqli_report(MYSQLI_REPORT_OFF);
+    $conexion = new mysqli($servidor, $usuario, $contrasena, $baseDatos);
 
-// Verificar conexión
-if ($conexion->connect_error) {
-    die(json_encode([
+    // Verificar conexión
+    if ($conexion->connect_error) {
+        throw new Exception("Error de conexión: " . $conexion->connect_error);
+    }
+
+    // Asegurar que la comunicación sea en UTF-8
+    $conexion->set_charset("utf8");
+
+} catch (Exception $e) {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([
         "estado" => "error",
-        "mensaje" => "Error de conexión: " . $conexion->connect_error
-    ]));
+        "mensaje" => $e->getMessage()
+    ]);
+    exit;
 }
-
-// Asegurar que la comunicación sea en UTF-8
-$conexion->set_charset("utf8");
 ?>

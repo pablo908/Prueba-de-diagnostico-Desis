@@ -1,55 +1,63 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
-ini_set('display_errors', 0);
 error_reporting(E_ALL);
-
-require_once 'conexion.php';
-
-// Obtener datos del cuerpo de la petición (JSON)
-$jsonRecibido = file_get_contents('php://input');
-$datos = json_decode($jsonRecibido, true);
-
-if (!$datos) {
-    http_response_code(400);
-    echo json_encode(["estado" => "error", "mensaje" => "No se recibieron datos válidos"]);
-    exit;
-}
+ini_set('display_errors', 0);
 
 try {
-    // Iniciar transacción para asegurar integridad
+    require_once 'conexion.php';
+
+    // Obtener datos del cuerpo de la petición (JSON)
+    $jsonRecibido = file_get_contents('php://input');
+    $datos = json_decode($jsonRecibido, true);
+
+    if (!$datos) {
+        throw new Exception("No se recibieron datos válidos");
+    }
+
+    // Validar que materiales sea un array
+    if (!isset($datos['materiales']) || !is_array($datos['materiales'])) {
+        throw new Exception("Los materiales no se recibieron correctamente.");
+    }
+
+    // Iniciar transacción
     $conexion->begin_transaction();
 
     // 1. Insertar en la tabla 'producto'
-    // Asumimos los nombres de columnas estándar
-    $stmt = $conexion->prepare("INSERT INTO producto (codigo, nombre, id_bodega, id_sucursal, moneda, precio, descripcion) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $sql = "INSERT INTO producto (codigo, nombre, id_bodega, id_sucursal, moneda, precio, descripcion) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    $stmt = $conexion->prepare($sql);
     
-    $stmt->bind_param(
-        "ssiisds", 
-        $datos['codigo'], 
-        $datos['nombre'], 
-        $datos['bodega'], 
-        $datos['sucursal'], 
-        $datos['moneda'], 
-        $datos['precio'], 
-        $datos['descripcion']
-    );
-
-    if (!$stmt->execute()) {
-        throw new Exception("Error al insertar producto: " . $stmt->error);
+    if (!$stmt) {
+        throw new Exception("Error al preparar consulta de producto: " . $conexion->error);
     }
 
-    // Obtener el ID del producto recién insertado
-    $idProducto = $conexion->insert_id;
+    // Aseguramos los tipos de datos
+    $codigo = (string)$datos['codigo'];
+    $nombre = (string)$datos['nombre'];
+    $bodega = (int)$datos['bodega'];
+    $sucursal = (int)$datos['sucursal'];
+    $moneda = (string)$datos['moneda'];
+    $precio = (float)$datos['precio'];
+    $descripcion = (string)$datos['descripcion'];
+
+    $stmt->bind_param("ssiisds", $codigo, $nombre, $bodega, $sucursal, $moneda, $precio, $descripcion);
+
+    if (!$stmt->execute()) {
+        throw new Exception("Error al insertar producto (posible código duplicado): " . $stmt->error);
+    }
 
     // 2. Insertar en la tabla intermedia de materiales
-    // Según el error, la clave foránea apunta a 'codigo' en la tabla 'producto'
-    $stmtMat = $conexion->prepare("INSERT INTO producto_material (codigo, id_material) VALUES (?, ?)");
+    $sqlMat = "INSERT INTO producto_material (codigo, id_material) VALUES (?, ?)";
+    $stmtMat = $conexion->prepare($sqlMat);
     
+    if (!$stmtMat) {
+        throw new Exception("Error al preparar consulta de materiales: " . $conexion->error);
+    }
+
     foreach ($datos['materiales'] as $idMaterial) {
-        // Usamos 's' para el código (string) e 'i' para el id_material (integer)
-        $stmtMat->bind_param("si", $datos['codigo'], $idMaterial);
+        $idMat = (int)$idMaterial;
+        $stmtMat->bind_param("si", $codigo, $idMat);
         if (!$stmtMat->execute()) {
-            throw new Exception("Error al insertar material ID $idMaterial: " . $stmtMat->error);
+            throw new Exception("Error al insertar material ID $idMat: " . $stmtMat->error);
         }
     }
 
@@ -58,13 +66,14 @@ try {
 
     echo json_encode([
         "estado" => "exito",
-        "mensaje" => "Producto guardado correctamente con ID: $idProducto"
+        "mensaje" => "Producto guardado correctamente con código: $codigo"
     ]);
 
 } catch (Exception $e) {
-    // Si algo falla, revertimos los cambios
-    $conexion->rollback();
-    http_response_code(500);
+    if (isset($conexion) && $conexion->connect_errno == 0) {
+        $conexion->rollback();
+    }
+    // No cambiamos el http_response_code para que el AJAX pueda leer el JSON de error
     echo json_encode([
         "estado" => "error",
         "mensaje" => $e->getMessage()
